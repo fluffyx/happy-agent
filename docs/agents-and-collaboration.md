@@ -28,11 +28,13 @@ The count is not a concurrency limit. It covers every agent below the root, on
 every branch, whether running, finished, or archived: agents never die, so a
 finished subagent still holds its place and still takes follow-ups. Subtasks
 count too. `create_subtask` is not capped by this limit, but a bot or task that
-already has five subtasks cannot `create_agent` anywhere in its tree. Agents
-started by a workflow, and anything they create, are not counted.
+already has `max_collaborators` subtasks (five by default) cannot `create_agent`
+anywhere in its tree. Agents started by a workflow, and anything they create,
+are not counted.
 
-At the limit, `create_agent` fails with "Each root agent tree is limited to 5
-collaborators." Reuse an existing subagent with `send_agent_message` instead.
+At the limit, `create_agent` fails with "Each root agent tree is limited to N
+collaborators.", where N is the configured `max_collaborators`. Reuse an
+existing subagent with `send_agent_message` instead.
 To allow more, raise the limit in the user `happy.toml` and
 [reload the daemon](configuration.md#applying-configuration-changes); a
 repository `happy.toml` cannot set it:
