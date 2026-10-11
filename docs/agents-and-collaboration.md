@@ -16,13 +16,34 @@ full context.
 - A **subagent** is an agent spawned and driven by another agent rather than by a
   person. It is not human-visible in the ordinary session list.
 
-Subagents are limited by depth and by concurrency:
+Subagents created with `create_agent` are limited by depth and by count, both
+within one root agent tree:
 
-| Limit                                   | Default |
-| --------------------------------------- | ------- |
-| Nesting depth                           | 3       |
-| Concurrently running subagents per tree | 8       |
-| Same, for Codex v2 collaboration models | 10      |
+| Limit                             | Default | Setting                   | Range  |
+| --------------------------------- | ------- | ------------------------- | ------ |
+| Nesting depth, including the root | 3       | `max_collaboration_depth` | 1–64   |
+| Subagents per root agent tree     | 5       | `max_collaborators`       | 1–1000 |
+
+The count is not a concurrency limit. It covers every agent below the root, on
+every branch, whether running, finished, or archived: agents never die, so a
+finished subagent still holds its place and still takes follow-ups. Subtasks
+count too. `create_subtask` is not capped by this limit, but a bot or task that
+already has `max_collaborators` subtasks (five by default) cannot `create_agent`
+anywhere in its tree. Agents started by a workflow, and anything they create,
+are not counted.
+
+At the limit, `create_agent` fails with "Each root agent tree is limited to N
+collaborators.", where N is the configured `max_collaborators`. Reuse an
+existing subagent with `send_agent_message` instead.
+To allow more, raise the limit in the user `happy.toml` and
+[reload the daemon](configuration.md#applying-configuration-changes); a
+repository `happy.toml` cannot set it:
+
+```toml
+[settings]
+max_collaborators = 10
+max_collaboration_depth = 3
+```
 
 A subagent at maximum
 depth is told to finish the task itself, and a subagent may only delegate further
